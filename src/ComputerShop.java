@@ -11,10 +11,8 @@
 // и количество кнопок мыши. Кроме продажи отдельных комплектующих магазин может продавать системные блоки (корпус, материнская плата, процессор,
 // оперативная память, жёсткий диск, опционально: видеокарта) с надбавкой 15% за сборку или компьютеры целиком (системный блок, монитор, устройства
 // ввода) с надбавкой 5% за сборку. Подсчёт стоимости товаров организовать через шаблон проектирования «Composite».
-import java.util.Collection;
+import java.util.*;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 public class ComputerShop {
     public static void main(String[] args) {
@@ -28,15 +26,20 @@ public class ComputerShop {
         Monitor monitor1=new Monitor("AS Rock 250","7",8900.0,22,"16/10");
         InputDevice inputDevice1=new InputDevice("Montech MKey","8",13000.0,"Default");
 
+        System.out.println("\n");
+        Tree computer=new Tree(List.of(new Leaf(processor1),new Leaf(opMemory1),new Leaf(videoCard1),new Leaf((monitor1)),new Leaf(hardDrive1),new Leaf(motherboard1),new Leaf(case1),new Leaf(inputDevice1)));
+        System.out.println(computer.getComponentsList()+"\n"+"Общая цена со сборкой компьютьера : "+computer.countPriceComputer());
+        System.out.println("\n");
 
-        Tree allComponents=new Tree(List.of(new Leaf(processor1),new Leaf(opMemory1),new Leaf(videoCard1)
-                ,new Leaf((monitor1)),new Leaf(hardDrive1),new Leaf(motherboard1),new Leaf(case1),new Leaf(inputDevice1)));
-        System.out.println(allComponents.countPrice());
-        System.out.println(allComponents.getComponentsList());
+        Tree block=new Tree(List.of(new Leaf(processor1),new Leaf(opMemory1),new Leaf(videoCard1),new Leaf(hardDrive1),new Leaf(motherboard1),new Leaf(case1)));
+        System.out.println(block.getComponentsList()+"\n"+"Общая стоимость блока : "+block.countPriceBlock());
+        System.out.println("\n");
 
-
-
-
+        List<Component> componentsList = new ArrayList<>(Arrays.asList(processor1, opMemory1, videoCard1, hardDrive1, motherboard1, case1, monitor1, inputDevice1));
+        Collections.sort(componentsList, new Sort());
+        for (Component component : componentsList) {
+            System.out.println(component.category+" | "+component.name+" | "+component.price );
+        }
 
 
     }
@@ -298,14 +301,14 @@ class InputDevice extends Component {
     }
 
     private int mouseButtons;
-    public InputDevice(String category, String name, String code, double price,int mouseButtons) {
-        super("Устройства ввода", name, code, price);
+    public InputDevice( String name, String code, double price,int mouseButtons) {
+        super("Устройство ввода", name, code, price);
         this.mouseButtons=mouseButtons;
     }
 
 
     public InputDevice( String name, String code, double price,String keyboardType) {
-        super("Устройства ввода", name, code, price);
+        super("Устройство ввода", name, code, price);
         this.keyboardType=keyboardType;
     }
 
@@ -319,30 +322,73 @@ class InputDevice extends Component {
 }
 
 
-    class Leaf implements Components {
 
-        public Leaf(Component component) {
-            this.component = component;
-        }
+class Leaf implements Components {
 
-        public Component getComponent() {
-            return component;
-        }
-
-        private Component component;
-
-        @Override
-        public double countPrice() {
-            return getComponent().price;
-        }
-
-        @Override
-        public String toString() {
-            return "Leaf{" +
-                    "component=" + component +
-                    '}';
-        }
+    public Leaf(Component component) {
+        this.component = component;
     }
+
+    public Component getComponent() {
+        return component;
+    }
+
+    private Component component;
+
+    @Override
+    public double countPrice() {
+        return getComponent().price;
+    }
+
+    @Override
+    public String toString() {
+        return "component=" + component.category +" | "+ component.getPrice() +
+                '}';
+    }
+}
+class Tree implements Components {
+    private final List<Components> componentsList;
+
+    public Tree(List<Components> componentsList) {
+        this.componentsList = componentsList;
+    }
+
+    public void add(Components components) {
+        componentsList.add(components);
+    }
+
+    public void remove(Components components) {
+        componentsList.remove(components);
+    }
+
+    public List<Components> getComponentsList() {
+        return componentsList;
+    }
+
+    @Override
+    public double countPrice() {
+        return componentsList.stream()
+                .map(Components::countPrice)
+                .mapToDouble(Double::doubleValue).sum();
+    }
+
+    public double countPriceBlock() {
+
+        return countPrice()+((countPrice()*15)/100);
+
+    }
+
+    public double countPriceComputer() {
+        return countPrice()+((countPrice()*5)/100);
+    }
+
+    @Override
+    public String toString() {
+        return "Tree{" +
+                "componentsList=" + componentsList +
+                '}';
+    }
+}
 
 class Sort implements Comparator<Component>{
 
